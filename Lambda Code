@@ -1,0 +1,35 @@
+import json
+import nacl.signing
+import nacl.exceptions
+
+DISCORD_PUBLIC_KEY = "not here buddy :)"
+
+def lambda_handler(event, context):
+    headers = {k.lower(): v for k, v in event["headers"].items()}
+
+    signature = headers.get("x-signature-ed25519")
+    timestamp = headers.get("x-signature-timestamp")
+
+    if not signature or not timestamp:
+        return {"statusCode": 401, "body": "Missing signature"}
+
+    body = event.get("body", "")
+    message = timestamp + body
+
+    try:
+        verify_key = nacl.signing.VerifyKey(bytes.fromhex(DISCORD_PUBLIC_KEY))
+        verify_key.verify(message.encode(), bytes.fromhex(signature))
+    except nacl.exceptions.BadSignatureError:
+        return {"statusCode": 401, "body": "Bad signature"}
+
+    payload = json.loads(body)
+
+    # Discord PING
+    if payload["type"] == 1:
+        return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"type": 1})
+        }
+
+    return {"statusCode": 200, "body": "OK"}
