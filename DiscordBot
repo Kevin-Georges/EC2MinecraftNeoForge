@@ -1,0 +1,33 @@
+import discord
+from discord import app_commands
+import boto3
+
+TOKEN = "DISCORD_BOT_TOKEN"
+INSTANCE_ID = "i-0abc123456789"
+AWS_REGION = "eu-west-2"  # change if needed
+
+ec2 = boto3.client("ec2", region_name=AWS_REGION)
+
+class MyClient(discord.Client):
+    def __init__(self):
+        intents = discord.Intents.default()
+        super().__init__(intents=intents)
+        self.tree = app_commands.CommandTree(self)
+
+    async def setup_hook(self):
+        await self.tree.sync()
+
+client = MyClient()
+
+@client.tree.command(name="start", description="Start the Minecraft EC2 server")
+async def start(interaction: discord.Interaction):
+    ec2.start_instances(InstanceIds=[INSTANCE_ID])
+    await interaction.response.send_message("EC2 instance is starting.")
+
+@client.tree.command(name="status", description="Check EC2 server status")
+async def status(interaction: discord.Interaction):
+    response = ec2.describe_instances(InstanceIds=[INSTANCE_ID])
+    state = response["Reservations"][0]["Instances"][0]["State"]["Name"]
+    await interaction.response.send_message(f"EC2 instance status: **{state}**")
+
+client.run(TOKEN)
