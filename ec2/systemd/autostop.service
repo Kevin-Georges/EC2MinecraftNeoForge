@@ -1,0 +1,28 @@
+[Unit]
+Description=Auto-stop EC2 when Minecraft is empty (grace period enabled)
+After=network.target neoforge.service
+
+[Service]
+Type=simple
+User=minecraft
+WorkingDirectory=/opt/minecraft
+Environment=INSTANCE_ID=i-0267725e43302370b
+Environment=AWS_REGION=eu-west-2
+Environment=EMPTY_MINUTES=10
+Environment=CHECK_INTERVAL=60
+Environment=BOOT_GRACE_SECONDS=600
+ExecStart=/usr/bin/python3 /opt/minecraft/autostop.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
+use these:
+sudo cp ec2/autostop/autostop.py /opt/minecraft/autostop.py
+sudo chown minecraft:minecraft /opt/minecraft/autostop.py
+sudo chmod +x /opt/minecraft/autostop.py
+
+sudo cp ec2/systemd/autostop.service /etc/systemd/system/autostop.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now autostop.service
