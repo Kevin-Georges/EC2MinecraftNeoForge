@@ -1,0 +1,18 @@
+[Unit]
+Description=NeoForge Minecraft Server
+After=network.target
+
+[Service]
+Type=simple
+User=minecraft
+WorkingDirectory=/opt/minecraft
+ExecStart=/opt/minecraft/start.sh
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=100000
+
+# Optional: environment
+Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
+[Install]
+WantedBy=multi-user.target
